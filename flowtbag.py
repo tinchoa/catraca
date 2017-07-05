@@ -18,6 +18,11 @@
    Contributors:
 
    @author: Daniel Arndt <danielarndt@gmail.com>
+
+   dependencies:
+    pip install netifaces
+    apt-get install python-libpcap
+
 '''
 
 import sys, traceback
