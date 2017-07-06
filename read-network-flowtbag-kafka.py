@@ -23,7 +23,7 @@ CLASS = 'live'
 TEST_FILE = 'testFlowtbag.txt'
 IFACE = 'ens3' #IFACE = 'eth0' #None = All
 TOPIC = 'test2'.encode('utf-8')# + str(contadorTopicos)
-ENCAPSULATION = GRE #NSH
+ENCAPSULATION = None #GRE #NSH
 producer = KafkaProducer(bootstrap_servers=['10.240.180.33:9092'])
 ############
 

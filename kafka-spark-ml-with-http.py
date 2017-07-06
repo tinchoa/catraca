@@ -36,30 +36,31 @@ import json
 
 
 
-numberFeatures=25 #dataset Antonio=25 dataset com=41
+numberFeatures=45 #dataset Antonio=25 dataset com=41
 ipFirewall='10.240.114.31'
+numberClasses=2 #for dataset Antonio (0=Normal, 1=DoS, 2=Probe) #renato 0=Normal 1=Alerta
+
 
 def convertTofloat(x):
-	for j in x:
-		for i in range(len(j)):
-			j[i]=float(j[i])
+	for i in range(len(x)):
+			x[i]=float(x[i])
 	return x
 
 
-def MatrixReducer(vectors, reducedIndex):
-	aux = reducedIndex[0:5] #tacking the first 6 features
+def MatrixReducer(vectors, index):
+	
+	aux = index[0:5] #tacking the first 6 features
 
-	index =[]
+	Newindex =[]
 
 	reducedMatrix =[]
 	#####
 	vectors = np.matrix(vectors)
 
 	for k in aux:
-		index.append(k[1])
+		Newindex.append(k[1])
 		#reducedMatrix.append(matrizRaw[:,k[1]]) #reduced matrix 
 		reducedMatrix.append(vectors[:,k[1]]) #reduced matrix 
-
 
 	vectors2 = np.column_stack(reducedMatrix)
 	vectors2 = np.array(vectors2)
@@ -68,7 +69,7 @@ def MatrixReducer(vectors, reducedIndex):
 
 
 def preparingData(data):
-
+	
 	virgulas=data.map(lambda x:x.split(','))
 
 	aux=virgulas.take(virgulas.count())
@@ -82,14 +83,22 @@ def preparingData(data):
 	matrizRaw=[]
 
 	for i in algo.value:
+		if sys.argv[1] == '1': # dataset Renato
+				i = np.delete(i,0,0) #IPsrc
+				i = np.delete(i,0,0) #PortSrc 
+				i = np.delete(i,0,0) #IPdst 
+				i = np.delete(i,0,0) #Portdst 
+				if (i[numberFeatures-5] != u'0'):
+					i[numberFeatures-5] = u'1'
 		vectors.append(np.array(i))
 		matrizRaw.append(i)
-		classes.append(i[len(i)-1])
+		classes.append(i[numberFeatures-5])
 
+	#print 'matriz Raw done'
 	matrizRaw=np.matrix(matrizRaw) #matrix with raw values
 
 	for m in range(len(vectors)):
-		vectors[m]=np.delete(vectors[m],numberFeatures-1,0) #deleting the class
+		vectors[m]=np.delete(vectors[m],numberFeatures-5,0) #deleting the class
 
 	mat = sc.parallelize(vectors) 	
 
@@ -99,6 +108,8 @@ def preparingData(data):
 
 	varianza = summary.variance()
 
+
+	#Feature Selection
 	#########new heuristic
 	w={}
 	aij={}
@@ -111,6 +122,7 @@ def preparingData(data):
 		w[i]=varianza[i]/aij[i]
 
 	index=sorted([(value,key) for (key,value) in w.items()],reverse=True) #features sorted
+	index.saveAsTextFile('hdfs://user/app/index-25-reduced.txt')
 
 	vectors2=MatrixReducer(vectors,index)
 
@@ -155,9 +167,7 @@ def preparingData(data):
 
 	final=sc.parallelize(e)
 	
-	return final, index	
-
-	
+	return final
 
 
 def blockFlows(prediction, vec):
@@ -186,34 +196,35 @@ def path_exist(file): #nao esta funcionando
 
 def getModel():
 	
-	#if path_exist("hdfs://master:9000/user/app/model-antonioDT.model"):
+	if path_exist("hdfs://master:9000/user/app/model25-reduced.model"):
 		
-	#	return DecisionTreeModel.load(sc, "hdfs://master:9000/user/app/model-antonioDT.model")
+		return DecisionTreeModel.load(sc, "hdfs://master:9000/user/app/model25-reduced.model")
 
-	#else:
-		trainingData, index = preparingData(sc.textFile('hdfs://master:9000/user/app/dataset_GTA.csv',5))
+	else:
+		trainingData = preparingData(sc.textFile('hdfs://master:9000/user/app/reduced25-classes.out',5))
 
 		# Train a DecisionTree model.
 		#  Empty categoricalFeaturesInfo indicates all features are continuous.
 		
-		model = DecisionTree.trainClassifier(trainingData, 3,{})
+		model = DecisionTree.trainClassifier(trainingData, numberClasses,{})
 											 #, maxDepth=5, maxBins=32)
-	#	model.save(sc, "hdfs://master:9000/user/app/model-antonioDT.model")			
+		model.save(sc, "hdfs://master:9000/user/app/model25-reduced.model")			
 
-		return	model, index
-
+		return	model
 
 
 if __name__ == "__main__":
-	if len(sys.argv) != 3:
+	if len(sys.argv) != 4:
 		print("Usage: kafka_wordcount.py <zk> <topic>", file=sys.stderr)
 		exit(-1)
 
 	sc = SparkContext(appName="Kafka with DT")
 
 	#Create model
+
+	index=sc.textFile("hdfs://user/app/index-25-reduced.txt")
 	
-	[model,index]=getModel()
+	model=getModel()
 	
 	######
 
@@ -222,24 +233,26 @@ if __name__ == "__main__":
 	ssc = StreamingContext(sc, 1)
 
 	###kafka
-	zkQuorum, topic = sys.argv[1:]
+	zkQuorum, topic = sys.argv[2:]
 
 	kvs = KafkaUtils.createStream(ssc, zkQuorum, "spark-streaming-consumer", {topic: 1})
 
 	parsed = kvs.map(lambda v: json.loads(v[1]))  
 
-	lines  = parsed.map(lambda x: convertTofloat([(x[i*numberFeatures:(i+1)*numberFeatures-1]) for i in range(len(x)/numberFeatures)]))
+	#lines  = parsed.map(lambda x: convertTofloat([(x[i*numberFeatures:(i+1)*numberFeatures-1]) for i in range(len(x)/numberFeatures)])) ## serve pra o antonio
 
-	vec = lines.map(lambda x: [Vectors.dense(x[i]) for i in range(len(x)) ]) #now we have the vectors with the format of the ML
+	lines  = parsed.map(lambda x: x.split(',')).map(lambda x: x[4:numberFeatures]).map(lambda x: convertTofloat(x))
+
+	#vec = lines.map(lambda x: [Vectors.dense(x[i]) for i in range(len(x)) ]) #now we have the vectors with the format of the ML
 	
-	test = vec.map(lambda x: MatrixReducer(x,index))
+	test = lines.map(lambda x: MatrixReducer(x,index))
 
 	#prediction=vec.transform(lambda _, rdd: model.predict(rdd))
 
-	prediction = test.transform(lambda _, rdd: model.predict(rdd))
+	prediction = test.transform(lambda _, rdd: model.predict(rdd)).pprint()
 
 
-	blockFlows(prediction,vec)
+	#blockFlows(prediction,vec)
 
 	#vec.transform(lambda _, rdd: model.predict(rdd)).pprint()
 
