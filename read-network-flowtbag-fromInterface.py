@@ -3,13 +3,15 @@ import Queue
 import os
 import netifaces as ni
 import flowtbag
+import sys
+import json
 
 #If Windows
 if os.name == 'nt': import win_inet_pton
 
 #Disable warnings
 import logging
-logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+#logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 from scapy.all import *
 load_contrib("nsh")
@@ -23,8 +25,10 @@ CLASS = 'live'
 TEST_FILE = 'testFlowtbag.txt'
 IFACE = 'ens3' #IFACE = 'eth0' #None = All
 TOPIC = 'test2'.encode('utf-8')# + str(contadorTopicos)
-ENCAPSULATION = GRE #NSH
+ENCAPSULATION = None #GRE #NSH
 producer = KafkaProducer(bootstrap_servers=['10.240.180.33:9092'])
+#PRODUCER = KafkaProducer(bootstrap_servers=['10.10.10.3:9092'])
+
 ############
 
 #CallBack
@@ -64,18 +68,18 @@ def capture():
     while(1):
         #Network to flowtbag format
         PKTS = []
-        sniff(timeout=WINDOW, iface=IFACE, filter='(udp port 6633) and (dst host '+ip+')', store=0, prn=removeNSH)
+        sniff(timeout=WINDOW, iface=IFACE, store=0, prn=noNSH)
         pkts = [(len(pkt), str(pkt), pkt.time) for pkt in PKTS]
         BUFFER.put(pkts)
 
 def write_flows():
     global BUFFER
     global TOPIC
-    global PRODUCER
+    global producer 
     while (1):
         pkts = BUFFER.get()
         flows=flowtbag.Flowtbag(pkts)
-        salvar_fluxosKafka(flows, CLASS, TOPIC, PRODUCER)
+        salvar_fluxosKafka(flows, CLASS, TOPIC, producer)
 
 #Start simple threads
 capture_thread = threading.Thread(target=capture)
