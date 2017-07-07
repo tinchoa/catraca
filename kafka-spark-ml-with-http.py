@@ -36,6 +36,7 @@ import json
 
 
 
+
 numberFeatures=45 #dataset Antonio=25 dataset com=41
 ipFirewall='10.240.114.31'
 numberClasses=2 #for dataset Antonio (0=Normal, 1=DoS, 2=Probe) #renato 0=Normal 1=Alerta
@@ -48,19 +49,18 @@ def convertTofloat(x):
 
 
 def MatrixReducer(vectors, index):
-	
-	aux = index[0:5] #tacking the first 6 features
+	#index=sc.textFile("hdfs://master:9000/user/app/index-25-reduced.txt")
 
-	Newindex =[]
+
+#	aux = index[0:5] #tacking the first 6 features
 
 	reducedMatrix =[]
 	#####
 	vectors = np.matrix(vectors)
 
-	for k in aux:
-		Newindex.append(k[1])
+	for k in index:
 		#reducedMatrix.append(matrizRaw[:,k[1]]) #reduced matrix 
-		reducedMatrix.append(vectors[:,k[1]]) #reduced matrix 
+		reducedMatrix.append(vectors[:,k]) #reduced matrix 
 
 	vectors2 = np.column_stack(reducedMatrix)
 	vectors2 = np.array(vectors2)
@@ -122,9 +122,12 @@ def preparingData(data):
 		w[i]=varianza[i]/aij[i]
 
 	index=sorted([(value,key) for (key,value) in w.items()],reverse=True) #features sorted
-	index.saveAsTextFile('hdfs://user/app/index-25-reduced.txt')
+	
+	k=[]
+	for i in index:
+		k.append(i[1])
 
-	vectors2=MatrixReducer(vectors,index)
+	vectors2=MatrixReducer(vectors,k[0:5])
 
 	###to make the reduced matrix with vectors
 	dif1=[]
@@ -167,7 +170,7 @@ def preparingData(data):
 
 	final=sc.parallelize(e)
 	
-	return final
+	return final, k[0:5]
 
 
 def blockFlows(prediction, vec):
@@ -197,20 +200,24 @@ def path_exist(file): #nao esta funcionando
 def getModel():
 	
 	if path_exist("hdfs://master:9000/user/app/model25-reduced.model"):
+		index=sc.textFile("hdfs://master:9000/user/app/index-25-reduced.txt")
+		a=index.collect()
+		b=lambda x : [ int(i) for i in x ]
 		
-		return DecisionTreeModel.load(sc, "hdfs://master:9000/user/app/model25-reduced.model")
+		return DecisionTreeModel.load(sc, "hdfs://master:9000/user/app/model25-reduced.model"), b(a)
+
 
 	else:
-		trainingData = preparingData(sc.textFile('hdfs://master:9000/user/app/reduced25-classes.out',5))
+		trainingData, index = preparingData(sc.textFile('hdfs://master:9000/user/app/reduced25-classes.out',5))
 
 		# Train a DecisionTree model.
 		#  Empty categoricalFeaturesInfo indicates all features are continuous.
 		
-		model = DecisionTree.trainClassifier(trainingData, numberClasses,{})
-											 #, maxDepth=5, maxBins=32)
+		model = DecisionTree.trainClassifier(trainingData, numberClasses,{})	 #, maxDepth=5, maxBins=32)
+
 		model.save(sc, "hdfs://master:9000/user/app/model25-reduced.model")			
 
-		return	model
+		return	model, index
 
 
 if __name__ == "__main__":
@@ -222,11 +229,11 @@ if __name__ == "__main__":
 
 	#Create model
 
-	index=sc.textFile("hdfs://user/app/index-25-reduced.txt")
+	[model,index]=getModel()
 	
-	model=getModel()
-	
-	######
+	if path_exist('hdfs://master:9000/user/app/index-25-reduced.txt') == False:
+		rdd=sc.parallelize(index)
+		rdd.saveAsTextFile('hdfs://master:9000/user/app/index-25-reduced.txt')
 
 	####Streaming
 	
