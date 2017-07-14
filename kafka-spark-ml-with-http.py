@@ -39,12 +39,18 @@ import json
 
 numberFeatures=45 #dataset Antonio=25 dataset com=41
 ipFirewall='10.240.114.31'
+#31'
 numberClasses=2 #for dataset Antonio (0=Normal, 1=DoS, 2=Probe) #renato 0=Normal 1=Alerta
 
 
 def convertTofloat(x):
 	for i in range(len(x)):
 			x[i]=float(x[i])
+	return x
+
+def convertToString(x):
+	for i in range(len(x)):
+		x[i]=str(x[i])
 	return x
 
 
@@ -173,18 +179,21 @@ def preparingData(data):
 	return final, k[0:5]
 
 
-def blockFlows(prediction, vec):
-	prediction.map(lambda x: x).pprint()
-	#if prediction != 0.0:
-		# ipSrc=vec.map(lambda x: [x[i][0] for i in range(len(x)) ])
-		# ipDst=vec.map(lambda x: [x[i][2] for i in range(len(x)) ])
-		# conn = httplib.HTTPConnection(ipFirewall,8000)
-		# conn.request("POST","/add",json.dumps({'ipSrc':ipSrc, 'ipDst':ipDst}))
-		# res=conn.getresponse()
-		# res.read()
+def blockFlows(flow):
+	vec = flow[0]
+	prediction = flow[1]
+	if prediction != 0.0:
+                tupla = json.loads(vec)
+		ipSrc=tupla[0]
+		ipDst=tupla[2]
+		conn = httplib.HTTPConnection(ipFirewall,8000)
+		conn.request("POST","/add",json.dumps({'ipSrc':ipSrc, 'ipDst':ipDst}))
+		res=conn.getresponse()
+		res.read()
+	return flow
 
 
-def path_exist(file): #nao esta funcionando
+def path_exist(file): 
 	path='hdfs://master:9000/user/app/'
 	try:
 		cmd = ['hdfs', 'dfs', '-find',path]
@@ -239,6 +248,7 @@ if __name__ == "__main__":
 	
 	ssc = StreamingContext(sc, 1)
 
+
 	###kafka
 	zkQuorum, topic = sys.argv[2:]
 
@@ -246,39 +256,25 @@ if __name__ == "__main__":
 
 	parsed = kvs.map(lambda v: json.loads(v[1]))  
 
-	#lines  = parsed.map(lambda x: convertTofloat([(x[i*numberFeatures:(i+1)*numberFeatures-1]) for i in range(len(x)/numberFeatures)])) ## serve pra o antonio
+    lines  = parsed.map(lambda x: x.split(',')).map(lambda x:(json.dumps(x[0:4]), x[4:numberFeatures])).mapValues(lambda x: convertTofloat(x))
 
-	lines  = parsed.map(lambda x: x.split(',')).map(lambda x: x[4:numberFeatures]).map(lambda x: convertTofloat(x))
-
-	#vec = lines.map(lambda x: [Vectors.dense(x[i]) for i in range(len(x)) ]) #now we have the vectors with the format of the ML
-	
-	test = lines.map(lambda x: MatrixReducer(x,index))
-
-	#prediction=vec.transform(lambda _, rdd: model.predict(rdd))
-
-	prediction = test.transform(lambda _, rdd: model.predict(rdd)).pprint()
-
-
-	#blockFlows(prediction,vec)
-
-	#vec.transform(lambda _, rdd: model.predict(rdd)).pprint()
-
-	######Evaluation
-
-	# Evaluate model on test instances and compute test error
-	# predictions = model.predict(vec.map(lambda x: x.features))
-	# labelsAndPredictions = vec.map(lambda lp: lp.label).zip(predictions)
-	# testErr = labelsAndPredictions.filter(lambda (v, p): v != p).count() / float(vec.count())
-	# print('Test Error = ' + str(testErr))
-	# print('Learned classification tree model:')
-	# print(model.toDebugString())
-
-
-
-
-
-
-
+	test = lines.flatMapValues(lambda x: MatrixReducer(x,index))
+	       
+	vec = test.mapValues( Vectors.dense) #now we have the vectors with the format of the ML
 		
+
+	try:	
+		vec=test.map(lambda x: x[1])
+		ips=test.transform(lambda x: x.keys().zipWithIndex()).map(lambda x: (x[1],x[0]))
+		algo=test.transform(lambda x: model.predict(x.values()).zipWithIndex()).map(lambda x: (x[1],x[0]))
+		joined = ips.join(algo).transform(lambda x: x.values())
+		joined.foreachRDD(lambda v: print(v.collect()))
+		joined.map(blockFlows).pprint()
+
+	except AttributeError:
+		pass
+
+
 	ssc.start()
 	ssc.awaitTermination()
+
