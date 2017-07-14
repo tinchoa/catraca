@@ -256,7 +256,7 @@ if __name__ == "__main__":
 
 	parsed = kvs.map(lambda v: json.loads(v[1]))  
 
-    lines  = parsed.map(lambda x: x.split(',')).map(lambda x:(json.dumps(x[0:4]), x[4:numberFeatures])).mapValues(lambda x: convertTofloat(x))
+    	lines  = parsed.map(lambda x: x.split(',')).map(lambda x:(json.dumps(x[0:4]), x[4:numberFeatures])).mapValues(lambda x: convertTofloat(x))
 
 	test = lines.flatMapValues(lambda x: MatrixReducer(x,index))
 	       
