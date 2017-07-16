@@ -259,12 +259,16 @@ if __name__ == "__main__":
 
 	parsed = kvs.map(lambda v: json.loads(v[1]))  
 
+<<<<<<< HEAD
 
 #	def preparaAporraToda(parsed):
 
         lines  = parsed.map(lambda x: x.split(',')).map(lambda x:(json.dumps(x[0:4]), x[4:numberFeatures])).mapValues(lambda x: convertTofloat(x))
 		
 #		lines= lines.reduceByKey()
+=======
+    	lines  = parsed.map(lambda x: x.split(',')).map(lambda x:(json.dumps(x[0:4]), x[4:numberFeatures])).mapValues(lambda x: convertTofloat(x))
+>>>>>>> 338486083b8e947f28379c3befe7ef96836e43c7
 
 	test = lines.flatMapValues(lambda x: MatrixReducer(x,index))
 
