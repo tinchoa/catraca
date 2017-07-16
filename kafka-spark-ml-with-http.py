@@ -38,7 +38,7 @@ import json
 
 
 numberFeatures=45 #dataset Antonio=25 dataset com=41
-ipFirewall='10.240.114.31'
+ipFirewall='10.240.114.45'
 #31'
 numberClasses=2 #for dataset Antonio (0=Normal, 1=DoS, 2=Probe) #renato 0=Normal 1=Alerta
 
@@ -182,9 +182,12 @@ def preparingData(data):
 def blockFlows(flow):
 	vec = flow[0]
 	prediction = flow[1]
+	#prediction.map(lambda x: x).pprint()
 	if prediction != 0.0:
                 tupla = json.loads(vec)
 		ipSrc=tupla[0]
+#		ipSrc.map(lambda x: str(x)).pprint()
+#		ipDst=vec.map(lambda x: x.split(',')).map(lambda x: x[2])
 		ipDst=tupla[2]
 		conn = httplib.HTTPConnection(ipFirewall,8000)
 		conn.request("POST","/add",json.dumps({'ipSrc':ipSrc, 'ipDst':ipDst}))
@@ -256,25 +259,41 @@ if __name__ == "__main__":
 
 	parsed = kvs.map(lambda v: json.loads(v[1]))  
 
-    lines  = parsed.map(lambda x: x.split(',')).map(lambda x:(json.dumps(x[0:4]), x[4:numberFeatures])).mapValues(lambda x: convertTofloat(x))
+
+#	def preparaAporraToda(parsed):
+
+        lines  = parsed.map(lambda x: x.split(',')).map(lambda x:(json.dumps(x[0:4]), x[4:numberFeatures])).mapValues(lambda x: convertTofloat(x))
+		
+#		lines= lines.reduceByKey()
 
 	test = lines.flatMapValues(lambda x: MatrixReducer(x,index))
+
 	       
 	vec = test.mapValues( Vectors.dense) #now we have the vectors with the format of the ML
 		
 
+	#	return test
+
+
+	#a=preparaAporraToda(parsed)
+
+
+
 	try:	
 		vec=test.map(lambda x: x[1])
 		ips=test.transform(lambda x: x.keys().zipWithIndex()).map(lambda x: (x[1],x[0]))
+#		prediction=test.transform(lambda x: model.predict(x.values())).pprint()
 		algo=test.transform(lambda x: model.predict(x.values()).zipWithIndex()).map(lambda x: (x[1],x[0]))
+#		ips.foreachRDD(lambda v: print(v.collect()))
+#		algo.foreachRDD(lambda v: print(v.collect()))
 		joined = ips.join(algo).transform(lambda x: x.values())
 		joined.foreachRDD(lambda v: print(v.collect()))
 		joined.map(blockFlows).pprint()
+#		algo=sc.parallelize(ips.collect(),prediction.collect()).pprint()
 
+#	        test.map(lambda x: (x[0],retornaRDD(x[1]))).pprint()
 	except AttributeError:
 		pass
 
-
 	ssc.start()
 	ssc.awaitTermination()
-
