@@ -1,18 +1,21 @@
 """
 run the example
-	bin/spark-submit --master spark://master:7077 --conf spark.executor.extraJavaOptions=" -XX:MaxPermSize=15G " --jars spark-streaming-kafka-0-8-assembly_2.11-2.1.1.jar  new-with-http.py hdfs://master:9000/user/app/reduced-25-with-classes.out 10.10.10.3:2181 topic1
-    
+	spark-submit --master spark://master:7077 --packages TargetHolding:pyspark-elastic:0.4.2 --jars /opt/spark/jars/elasticsearch-spark-20_2.10-5.5.1.jar,/opt/spark/jars/spark-streaming-kafka-0-8-assembly_2.11-2.1.1.jar --conf spark.executor.extraJavaOptions=" -XX:MaxPermSize=15G "  /tmp/new.py hdfs://master:9000/user/app/reduced-25-with-classes.out 10.10.10.3:2181 topic1
 
+'
 """
 from __future__ import print_function
 
 import sys
 
+from pyspark_elastic import EsSparkContext
 from pyspark.mllib.linalg import Vectors
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils, OffsetRange
 import json
+import geoip2
+import time
 
 #### ML
 from pyspark.mllib.tree import DecisionTree, DecisionTreeModel
@@ -126,36 +129,7 @@ def CorrelationFeature(vectors):
 
 
 
-# def MatrixReducer(vectors,index):
-
-# 	def takeElement(vector):
-# 		p=[]
-# 		for i in index:
-# 			p.append(vector[i])
-# 		return p
-	
-# 	reducedMatrix= vectors.map(lambda x: takeElement(x))
-# 	#print 'reducing matrix'
-
-# 	# for k in aux:
-# 	# 	index.append(k[1])
-# 	# 	#reducedMatrix.append(matrizRaw[:,k[1]]) #reduced matrix 
-# 	# 	reducedMatrix.append(vectors[:,k[1]]) #reduced matrix 
-
-
-# 	vectors2=reducedMatrix.map(lambda x: np.column_stack(x))
-
-# 	# vectors2= np.column_stack(reducedMatrix)
-# 	# vectors2= np.array(vectors2)
-
-# 	return vectors2 #matriz reducida
-
-
 def MatrixReducer(vectors, index):
-	#index=sc.textFile("hdfs://master:9000/user/app/index-25-reduced.txt")
-
-
-#	aux = index[0:5] #tacking the first 6 features
 
 	reducedMatrix =[]
 	#####
@@ -177,39 +151,6 @@ def pass2libsvm(vectors2,classes):
 	grouped=newVector.groupByKey().mapValues(list)
 	final=newVector.map(lambda x : LabeledPoint(x[0],x[1]))
 
-
-	# ###to make the reduced matrix with vectors
-	# dif1=[]
-	# #dif1 = [0]*len(vectors)
-	# z={}
-	# z[1]=[]
-	# dif2=[]
-	# #dif2 = [0]*len(vectors)
-	# z[2]=[]
-
-	# dif3=[]
-	# z[3]=[]
-	# #dif3 = [0]*len(vectors)
-	# e=[]
-	# for i in range(len(vectors2)):
-	# 		if int(classes[i]) == 0:
-	# 			dif1.append(vectors2[i])
-	# 			e.append(LabeledPoint(0,np.array(dif1)))
-	# 			dif1=[]
-	# 		if int(classes[i]) == 1:
-	# 			dif2.append(vectors2[i])
-	# 			e.append(LabeledPoint(1,np.array(dif2)))
-	# 			dif2=[]
-	# 		if int(classes[i]) == 2:
-	# 			dif3.append(vectors2[i])
-	# 			e.append(LabeledPoint(2,np.array(dif3)))
-	# 			dif3=[]
-		
-	# 	#ver como hacer el tema de la libsvm list
-	# 	#deveria ser algo del tipo 1, () ,2 (), 1 (), 3 (), 2()
-
-	#print 'returning libsvm format'
-	# final=sc.parallelize(e) #return in libsvm format
 
 	return final
 
@@ -283,6 +224,32 @@ def getModel(path,file):
 
 		return	model, index
 
+def addLocation (x):
+	dictX = dict(x)
+	locSrcIp = geoip2.geolite2.lookup(dictX['srcip'])
+	locDstIp = geoip2.geolite2.lookup(dictX['dstip'])
+	
+	try:
+
+		if locSrcIp and locSrcIp.location:
+
+			dictX['srclocation']= {'lat': locSrcIp.location[0], 'lon':locSrcIp.location[1]}
+		else:
+			dictX['srclocation']= {'lat': 48, 'lon':22}
+
+
+		if locDstIp and locDstIp.location:
+			dictX['dstlocation']= {'lat': locSrcIp.location[0], 'lon':locSrcIp.location[1]}
+		else:
+			dictX['dstlocation']= {'lat': 48, 'lon':22}
+	except AttributeError:
+
+		pass
+	except TypeError:
+		pass
+		
+	return dictX
+
 
 if __name__ == "__main__":
 	if len(sys.argv) != 4:
@@ -296,6 +263,12 @@ if __name__ == "__main__":
 	orig=sys.argv[1]
 	path='hdfs://master:9000/user/app/'
 	file=orig.split('app/')[1]
+	features=sc.textFile(path+'feature-des.txt').collect()
+	feat=[]
+	for i in features:
+	    	feat.append(i.split('-')[0].split(' ')[0])
+
+
 
 	[model,index]=getModel(path,file)
 	
@@ -313,51 +286,55 @@ if __name__ == "__main__":
 
 	kvs = KafkaUtils.createStream(ssc, zkQuorum, "spark-streaming-consumer", {topic: 1})
 
-	parsed = kvs.map(lambda v: json.loads(v[1]))  
+	parsed = kvs.map(lambda v: json.loads(v[1]))
 
 
 #	def preparaAporraToda(parsed):
 
 	lines  = parsed.map(lambda x: x.split(',')).map(lambda x:(json.dumps(x[0:4]), x[4:numberFeatures-1])).mapValues(lambda x: convertTofloat(x))
-		
+
+ 	elastic=parsed.map(lambda x: x.split(',')).map(lambda x: {feat[i]: x[i] for i in range(numberFeatures-2)}).map(addLocation) #get the whole verctor
+
 #		lines= lines.reduceByKey()
 	#lines.pprint()
 
  	test = lines.flatMapValues(lambda x: MatrixReducer(x,index))
 
+	conf = {"es.resource" : "spark/test", "es.nodes" : "10.10.10.15", "es.index.auto.create": "true"}
 		   
 	vec = test.mapValues( Vectors.dense) #now we have the vectors with the format of the ML
-		
-
-	#	return test
 
 
-	#a=preparaAporraToda(parsed)
-
-	# def saveHDFS(rdd2,a):
-	# 	if a==0:
-	# 		b=[]
-	# 	if a <=10:
-	# 		b.append(rdd2)
-	# 		a+=1
-	# 	else:
-	# 		rdd2.saveAsTextFile('hdfs://master:9000/user/app/joined.txt')
-	# 		a=0
-	# 		b=[]
-	# 	return a
 
 	try:	
 		vec=test.map(lambda x: x[1])
 		ips=test.transform(lambda x: x.keys().zipWithIndex()).map(lambda x: (x[1],x[0]))
 #		prediction=test.transform(lambda x: model.predict(x.values())).pprint()
 		algo=test.transform(lambda x: model.predict(x.values()).zipWithIndex()).map(lambda x: (x[1],x[0]))
+#		algo.foreachRDD(lambda v: print(v.collect()))
+
 #		ips.foreachRDD(lambda v: print(v.collect()))
 #		algo.foreachRDD(lambda v: print(v.collect()))
 		joined = ips.join(algo).transform(lambda x: x.values())
 		#a=saveHDFS(joined,a)
 		joined.foreachRDD(lambda v: print(v.collect()))
-		joined.map(blockFlows).pprint()
+		#joined.map(blockFlows).pprint()
 
+	        yyy=elastic.transform(lambda x: x.zipWithIndex()).map(lambda x: (x[1],x[0]))
+		
+
+                toElastic = yyy.join(algo).transform(lambda x: x.values())
+                #toElastic.foreachRDD(lambda v: print(v.collect()))
+#		send=toElastic.join(algo).pprint()
+#		almostSend=toElastic.map(lambda x: dict([i for i in x[0].items()+[('predict',x[1])]]))
+		
+		almostSend=toElastic.map(lambda x: dict([i for i in x[0].items()+[('predict',x[1]),('timestamp',int(time.time()*1000))]]))
+		
+		now=almostSend.map(lambda x: ('key',x))
+                now.foreachRDD(lambda v: print(v.collect()))
+		
+			#toElastic.saveAsNewAPIHadoopFile(path='-',outputFormatClass="org.elasticsearch.hadoop.mr.EsOutputFormat",keyClass="org.apache.hadoop.io.NullWritable",valueClass="org.elasticsearch.hadoop.mr.LinkedMapWritable",conf=conf)
+		now.foreachRDD(lambda x: x.saveAsNewAPIHadoopFile(path='-',outputFormatClass="org.elasticsearch.hadoop.mr.EsOutputFormat",keyClass="org.apache.hadoop.io.NullWritable",valueClass="org.elasticsearch.hadoop.mr.LinkedMapWritable",conf=conf))
 #		algo=sc.parallelize(ips.collect(),prediction.collect()).pprint()
 
 #	        test.map(lambda x: (x[0],retornaRDD(x[1]))).pprint()
@@ -366,3 +343,9 @@ if __name__ == "__main__":
 
 	ssc.start()
 	ssc.awaitTermination()
+
+
+
+
+
+
