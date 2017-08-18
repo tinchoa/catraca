@@ -1,4 +1,4 @@
-### pySpark-Ids
+### Catraca
 
 A combination of Kafka and pySpark to detect anomal flows in the network.
 Done by GTA/UFRJ team  :office::  
