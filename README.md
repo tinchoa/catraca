@@ -1,5 +1,7 @@
 ### Catraca
 
+![alt text](https://github.com/tinchoa/catraca/blob/master/logo-v0.png)
+
 Uma Ferramenta para Classificação e Análise de Tráfego Escalável baseada em Processamento por Fluxo
 
 
@@ -13,6 +15,5 @@ Contributors:
 - Igor Alvarenga  >>> alvarenga@gta.ufrj.br
 - Gabriel Rebello >>> gabriel@gta.ufrj.br
 - Antonio Lobato  >>> antonio@gta.ufrj.br
-
 
 
