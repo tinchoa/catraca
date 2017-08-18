@@ -1,6 +1,6 @@
 ### Catraca
 
-A combination of Kafka and pySpark to detect anomal flows in the network.
+Uma Ferramenta para Classificação e Análise de Tráfego Escalável baseada em Processamento por Fluxo
 Done by GTA/UFRJ team  :office::  
 
 Contributors:
