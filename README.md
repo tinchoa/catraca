@@ -1,6 +1,7 @@
 ### Catraca
+
 <p align="center">
-  <img width="460" height="300" src=https://github.com/tinchoa/catraca/blob/master/images/catracalogofull-original.png">
+  <img src="https://github.com/tinchoa/catraca/blob/master/images/catracalogofull-original.png">
 </p>
 
 
