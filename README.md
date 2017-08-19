@@ -1,9 +1,8 @@
 ### Catraca
 
 
-<p align="center"> 
-<img src=![alt text](https://github.com/tinchoa/catraca/blob/master/images/catracalogofull-original.png)>
-</p>
+![alt text](https://github.com/tinchoa/catraca/blob/master/images/catracalogofull-original.png?style=centerme)
+
 
 Uma Ferramenta para Classificação e Análise de Tráfego Escalável baseada em Processamento por Fluxo
 
