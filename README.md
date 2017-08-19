@@ -1,8 +1,10 @@
 ### Catraca
 <p align="center">
-
-![alt text](https://github.com/tinchoa/catraca/blob/master/images/catracalogofull-original.png?style=centerme)
+  <img width="460" height="300" src=https://github.com/tinchoa/catraca/blob/master/images/catracalogofull-original.png">
 </p>
+
+
+
 
 CATRACA: An sCAlable TRAffic Classifier and Analyzer
 
