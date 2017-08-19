@@ -1,6 +1,6 @@
 ### Catraca
 
-![alt text](https://github.com/tinchoa/catraca/blob/master/logo-v0.png)
+![alt text](https://github.com/tinchoa/catraca/blob/master/images/catracalogofull-original.png)
 
 Uma Ferramenta para Classificação e Análise de Tráfego Escalável baseada em Processamento por Fluxo
 
