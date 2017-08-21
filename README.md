@@ -20,4 +20,4 @@ Contributors:
 - Gabriel Rebello >>> gabriel@gta.ufrj.br
 - Antonio Lobato  >>> antonio@gta.ufrj.br
 
-
+Please visit the [documentation](https://github.com/tinchoa/catraca/wiki) for more information.
