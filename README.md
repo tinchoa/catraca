@@ -19,5 +19,6 @@ Contributors:
 - Igor Alvarenga  >>> alvarenga@gta.ufrj.br
 - Gabriel Rebello >>> gabriel@gta.ufrj.br
 - Antonio Lobato  >>> antonio@gta.ufrj.br
+- Otto Carlos M. B. Duarte  >>> otto@gta.ufrj.br
 
 Please visit the [documentation](https://github.com/tinchoa/catraca/wiki) for more information.
