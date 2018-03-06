@@ -99,7 +99,7 @@ def MatrixReducer(vector,index):
 			p.append(vector[i[1]])
 		return p
 	
-	reducedMatrix= vectors.map(lambda x: takeElement(x))
+	reducedMatrix= vector.map(lambda x: takeElement(x))
 	#print 'reducing matrix'
 
 	# for k in aux:
