@@ -173,7 +173,7 @@ if __name__ == "__main__":
 
 	reduced=CorrelationFeature(vector) #se precisar de feature do Feature Selection
 
-	data=pass2libsvm(reduced,classes) 
+	data=pass2libsvm(reduced,sc.parallelize(classes))
 
 	#para a (5-tupla deveria ser algo como ) data=pass2libsvm(vector)
 
