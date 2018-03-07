@@ -12,7 +12,8 @@ bin/spark-submit  --master spark://master:7077 feature-selection.py  <1= dataset
 
 '''
 
-numberFeatures=46
+#numberFeatures=46
+numberFeatures=42
 numberClasses=2 #for dataset Antonio (0=Normal, 1=DoS, 2=Probe) #renato 0=Normal 1=Alerta
 
 def dataPreparing(lines):
