@@ -45,7 +45,7 @@ def dataPreparing(lines):
 	matrizRaw=np.matrix(matrizRaw) #matrix with raw values
 
 
-	return vectors
+	return vectors,classes
 
 def CorrelationFeature(vectors):
 
@@ -208,11 +208,11 @@ if __name__ == "__main__":
 
 	#data=CorrelationFeature(sc.textFile('hdfs://master:9000/user/app/reduced-25.out',5))
 
-	vector=dataPreparing(sc.textFile(sys.argv[2],5))
+	vector,classes=dataPreparing(sc.textFile(sys.argv[2],5))
 
 	reduced=CorrelationFeature(vector) #se precisar de feature do Feature Selection
 
-	data=pass2libsvm(reduced) 
+	data=pass2libsvm(reduced,classes) 
 
 	#para a (5-tupla deveria ser algo como ) data=pass2libsvm(vector)
 
