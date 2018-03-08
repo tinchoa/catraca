@@ -43,7 +43,7 @@ def CorrelationFeature(vectors):
 	
 	print 'Calculation Correlation'
 	
-	matriz=sc.broadcast(Statistics.corr(sc.parallelize(vectors), method="pearson"))
+	matriz=sc.broadcast(Statistics.corr(vectors, method="pearson"))
 
 	summary = Statistics.colStats(vectors)
 
