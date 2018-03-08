@@ -95,7 +95,7 @@ def MatrixReducer(vector,index):
 
 	def takeElement(vector):
 		p=[]
-		for i in aux:
+		for i in index:
 			p.append(vector[i[1]])
 		return p
 	
