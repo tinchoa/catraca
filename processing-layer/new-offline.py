@@ -21,7 +21,7 @@ bin/spark-submit  --master spark://master:7077 feature-selection.py  <1= dataset
 '''
 
 numberFeatures=46 # Should be every analysed feature; that is, all-4 (ipsrc,portsrc,ipdest,portdst)
-numberClasses=3   # For dataset Antonio: 0=Normal, 1=DoS, 2=Probe | Renato: 0=Normal 1=Alert
+numberClasses=2   # For dataset Antonio: 0=Normal, 1=DoS, 2=Probe | Renato: 0=Normal 1=Alert
 classes=[]
 
 
