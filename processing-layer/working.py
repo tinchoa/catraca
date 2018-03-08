@@ -29,15 +29,16 @@ def dataPreparing(lines):
 	classes=[]
 
 	matrizRaw=[]
-
+	
+	#alterei dentro do for
 	for i in algo.value:
-		if sys.argv[1] == '1': # dataset Renato
-				i = np.delete(i,0,0) #IPsrc
-				i = np.delete(i,0,0) #PortSrc 
-				i = np.delete(i,0,0) #IPdst 
-				i = np.delete(i,0,0) #Portdst 
-				if (i[numberFeatures-1] != u'0'):
-					i[numberFeatures-1] = u'1'
+		#if sys.argv[1] == '1': # dataset Renato
+		i = np.delete(i,0,0) #IPsrc
+		i = np.delete(i,0,0) #PortSrc 
+		i = np.delete(i,0,0) #IPdst 
+		i = np.delete(i,0,0) #Portdst 
+		if (i[numberFeatures-1] != u'0'):
+			i[numberFeatures-1] = u'1'
 		vectors.append(np.array(i))
 		matrizRaw.append(i)
 		classes.append(i[numberFeatures-1])
@@ -50,10 +51,10 @@ def dataPreparing(lines):
 
 def CorrelationFeature(vectors):
 
-
+	#alterei aqui
 	#to remove  features
-	for m in range(len(vectors)):
-		vectors[m]=np.delete(vectors[m],numberFeatures-1,0) #deleting the class
+	#for m in range(len(vectors)):
+	#	vectors[m]=np.delete(vectors[m],numberFeatures-1,0) #deleting the class
 		
 	# 	vectors[m]=np.delete(vectors[m],19,0) #empty 
 	# 	vectors[m]=np.delete(vectors[m],19,0) #empty
@@ -124,12 +125,11 @@ def CorrelationFeature(vectors):
 	return vectors2 #matriz reducida
 
 def pass2libsvm(vectors2,classes):
-
-	newVector=classes.zip(vectors2)
+	vectorRDD = sc.parallelize(vectors2) #alterei aqui
+	newVector=classes.zip(vectorRDD)
 	grouped=newVector.groupByKey().mapValues(list)
 	final=newVector.map(lambda x : LabeledPoint(x[0],x[1]))
 
-	
 	print 'returning libsvm format'
 
 	return final
@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
 	#data=CorrelationFeature(sc.textFile('hdfs://master:9000/user/app/reduced-25.out',5))
 
-	vector,classes=dataPreparing(sc.textFile(sys.argv[2],5))
+	vector,classes=dataPreparing(sc.textFile('hdfs://master:9000/user/app/reduced-25.out',5))
 
 	reduced=CorrelationFeature(vector) #se precisar de feature do Feature Selection
 
