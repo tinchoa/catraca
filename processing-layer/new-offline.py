@@ -13,7 +13,7 @@ from pyspark.mllib.stat import Statistics
 from pyspark.mllib.regression import LabeledPoint
 from pyspark.mllib.util import MLUtils
 from tempfile import NamedTemporaryFile
-from sklearn.cluster import KMeans
+
 
 '''
 bin/spark-submit  --master spark://master:7077 feature-selection.py  <1= dataset Renato> hdfs://master:9000/user/app/classes-25.out
@@ -117,41 +117,12 @@ def MatrixReducer(vector,index):
 
 def pass2libsvm(vectors2,classes):
 
-	newVector=classes.zip(vectors2)
+	newVector=classes.zip(sc.parallelize(vectors2))
 	grouped=newVector.groupByKey().mapValues(list)
 	final=newVector.map(lambda x : LabeledPoint(x[0],x[1]))
 
 
-	# ###to make the reduced matrix with vectors
-	# dif1=[]
-	# #dif1 = [0]*len(vectors)
-	# z={}
-	# z[1]=[]
-	# dif2=[]
-	# #dif2 = [0]*len(vectors)
-	# z[2]=[]
-
-	# dif3=[]
-	# z[3]=[]
-	# #dif3 = [0]*len(vectors)
-	# e=[]
-	# for i in range(len(vectors2)):
-	# 		if int(classes[i]) == 0:
-	# 			dif1.append(vectors2[i])
-	# 			e.append(LabeledPoint(0,np.array(dif1)))
-	# 			dif1=[]
-	# 		if int(classes[i]) == 1:
-	# 			dif2.append(vectors2[i])
-	# 			e.append(LabeledPoint(1,np.array(dif2)))
-	# 			dif2=[]
-	# 		if int(classes[i]) == 2:
-	# 			dif3.append(vectors2[i])
-	# 			e.append(LabeledPoint(2,np.array(dif3)))
-	# 			dif3=[]
-		
-	# 	#ver como hacer el tema de la libsvm list
-	# 	#deveria ser algo del tipo 1, () ,2 (), 1 (), 3 (), 2()
-
+	
 	print 'returning libsvm format'
 	# final=sc.parallelize(e) #return in libsvm format
 
