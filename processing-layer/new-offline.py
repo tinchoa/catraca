@@ -117,7 +117,7 @@ def MatrixReducer(vector,index):
 
 def pass2libsvm(vectors2,classes):
 
-	newVector=classes.zip(sc.parallelize(vectors2))
+	newVector=classes.zip(vectors2)
 	grouped=newVector.groupByKey().mapValues(list)
 	final=newVector.map(lambda x : LabeledPoint(x[0],x[1]))
 
