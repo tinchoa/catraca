@@ -8,8 +8,11 @@ import sys
 from sklearn.cluster import KMeans
 
 '''
-bin/spark-submit  --master spark://master:7077 feature-selection.py  <1= dataset Renato> hdfs://master:9000/user/app/classes-25.out
+bin/spark-submit  --master spark://master:7077 feature-selection.py <input dataset> <output file>
 
+if the dataset is storage in HDFS:  hdfs://master:9000/user/app/classes-25.out
+for the ouput file: hdfs://master:9000/user/app/results
+	## comand to get file hdfs dfs -getmerge hdfs://master:9000/user/app/result/* /tmp/test/file.txt
 '''
 
 #numberFeatures=46
@@ -165,11 +168,10 @@ if __name__ == "__main__":
 
 	
 	sc = SparkContext(appName="Feature Selection")
-
-
+        
 	#data=CorrelationFeature(sc.textFile('hdfs://master:9000/user/app/reduced-25.out',5))
 
-	vector,classes=dataPreparing(sc.textFile('hdfs://master:9000/user/app/reduced-25.out',5))
+	vector,classes=dataPreparing(sc.textFile(str(sys.argv[1],5))
 
 	reduced=CorrelationFeature(vector) #se precisar de feature do Feature Selection
 
@@ -227,6 +229,10 @@ if __name__ == "__main__":
 	print("Recall = %s" % recall)
 	print("F1 Score = %s" % f1Score)
 	print("confusionMatrix = %s" % confusionMatrix)
+  	
+	#file='hdfs://master:9000/user/app/Results_'+str(file).split('/app')[1].split('/')[1].split('.csv')[0]
+	file=str(sys.argv[2])
+	sc.parallelize([metrics.accuracy, metrics.precision(), metrics.recall(),metrics.fMeasure(), metrics.confusionMatrix()]).saveAsTextFile(file)
 
 
 
