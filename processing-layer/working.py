@@ -171,7 +171,7 @@ if __name__ == "__main__":
         
 	#data=CorrelationFeature(sc.textFile('hdfs://master:9000/user/app/reduced-25.out',5))
 
-	vector,classes=dataPreparing(sc.textFile(str(sys.argv[1],5))
+	vector,classes=dataPreparing(sc.textFile(str(sys.argv[1],5)))
 
 	reduced=CorrelationFeature(vector) #se precisar de feature do Feature Selection
 
