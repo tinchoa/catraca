@@ -31,6 +31,7 @@ def dataPreparing(lines):
 	vectors = virgulas.mapValues(lambda x: np.array(x)) #convertir os values em arrays
 	test = vectors.map(lambda x:x[1]) #take so os values
 	classes = test.map(lambda x:x[numberFeatures-5]) #get the class
+	classes=classes.map(lambda x: '1' if x !='0' else '0') # passing to binary classes
 	test = test.map(lambda x:x[0:numberFeatures-5]) #removing the class
 	
 	print 'processing data'	
