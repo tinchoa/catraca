@@ -86,8 +86,8 @@ def CorrelationFeature(vectors):
 
 	index=r[0:6] #tacking the first 6 features
 
-	MatrixReducer(vectors,index)
-	#return index
+	red=MatrixReducer(vectors,index)
+	return red
 
 
 
