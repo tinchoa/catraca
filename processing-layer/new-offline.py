@@ -183,7 +183,7 @@ if __name__ == "__main__":
 	#para a (5-tupla deveria ser algo como ) data=pass2libsvm(vector)
 
 	(trainingData, testData) = data.randomSplit([0.7, 0.3])
-	print 'data devided'
+	print 'dataset divided in train and test'
 
 	#trainingData = CorrelationFeature(sc.textFile('hdfs://master:9000/user/app/classes-16.out',15))
 
