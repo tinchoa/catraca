@@ -263,7 +263,7 @@ if __name__ == "__main__":
 	orig=sys.argv[1]
 	path='hdfs://master:9000/user/app/'
 	file=orig.split('app/')[1]
-	features=sc.textFile(path+'feature-des.txt').collect()
+	features=sc.textFile(path+'features-des.txt').collect()
 	feat=[]
 	for i in features:
 	    	#feat.append(i.split('-')[0].split(' ')[0])
