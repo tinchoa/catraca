@@ -66,12 +66,12 @@ def dataPreparing(lines):
 	vectors = virgulas.mapValues(lambda x: np.array(x)) #convertir os values em arrays
 	test = vectors.map(lambda x:x[1]) #take so os values
 	classes = test.map(lambda x:x[numberFeatures-5]) #get the class
+	classes=classes.map(lambda x: '1' if x !='0' else '0') # passing to binary classes
 	test = test.map(lambda x:x[0:numberFeatures-5]) #removing the class
 	
-	#print 'processing data'	
+	print 'processing data'	
 
 	return test, classes ####ver como llega este test
-
 
 def CorrelationFeature(vectors):
 
@@ -130,20 +130,45 @@ def CorrelationFeature(vectors):
 
 
 
-def MatrixReducer(vectors, index):
+#def MatrixReducer(vectors, index):
 
-	reducedMatrix =[]
+#	reducedMatrix =[]
 	#####
-	vectors = np.matrix(vectors)
+#	vectors = np.matrix(vectors)
 
-	for k in index:
+#	for k in index:
 		#reducedMatrix.append(matrizRaw[:,k[1]]) #reduced matrix 
-		reducedMatrix.append(vectors[:,k]) #reduced matrix 
+#		reducedMatrix.append(vectors[:,k]) #reduced matrix 
 
-	vectors2 = np.column_stack(reducedMatrix)
-	vectors2 = np.array(vectors2)
+#	vectors2 = np.column_stack(reducedMatrix)
+#	vectors2 = np.array(vectors2)
 	
-	return vectors2
+#	return vectors2
+
+
+def MatrixReducer(vectors,index):
+
+	def takeElement(vector):
+		p=[]
+		for i in index:
+			p.append(vector[i[1]])
+		return p
+	
+	reducedMatrix= vector.map(lambda x: takeElement(x))
+	#print 'reducing matrix'
+
+	# for k in aux:
+	# 	index.append(k[1])
+	# 	#reducedMatrix.append(matrizRaw[:,k[1]]) #reduced matrix 
+	# 	reducedMatrix.append(vectors[:,k[1]]) #reduced matrix 
+
+
+	vectors2=reducedMatrix.map(lambda x: np.column_stack(x))
+
+	# vectors2= np.column_stack(reducedMatrix)
+	# vectors2= np.array(vectors2)
+
+	return vectors2 #matriz reducida
 
 
 def pass2libsvm(vectors2,classes):
