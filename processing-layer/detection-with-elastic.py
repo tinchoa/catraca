@@ -154,7 +154,7 @@ def MatrixReducer(vectors,index):
 			p.append(vector[i[1]])
 		return p
 	
-	reducedMatrix= vector.map(lambda x: takeElement(x))
+	reducedMatrix= vectors.map(lambda x: takeElement(x))
 	#print 'reducing matrix'
 
 	# for k in aux:
