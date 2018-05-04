@@ -69,7 +69,7 @@ def dataPreparing(lines):
 	classes=classes.map(lambda x: '1' if x !='0' else '0') # passing to binary classes
 	test = test.map(lambda x:x[0:numberFeatures-5]) #removing the class
 	
-	print 'processing data'	
+	#print 'processing data'	
 
 	return test, classes ####ver como llega este test
 
