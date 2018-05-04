@@ -44,6 +44,7 @@ import json
 
 numberFeatures=46 #dataset Antonio=25 dataset com=41
 ipFirewall='10.240.114.45'
+ipES="10.20.20.18"
 #31'
 numberClasses=2 #for dataset Antonio (0=Normal, 1=DoS, 2=Probe (3 classes)) #renato 0=Normal 1=Alerta (2 classes)
 
@@ -301,7 +302,7 @@ if __name__ == "__main__":
 
  	test = lines.flatMapValues(lambda x: MatrixReducer(x,index))
 
-	conf = {"es.resource" : "spark/test", "es.nodes" : "10.10.10.15", "es.index.auto.create": "true"}
+	conf = {"es.resource" : "spark/test", "es.nodes" : ipES, "es.index.auto.create": "true"}
 		   
 	vec = test.mapValues( Vectors.dense) #now we have the vectors with the format of the ML
 
