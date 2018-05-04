@@ -266,7 +266,8 @@ if __name__ == "__main__":
 	features=sc.textFile(path+'feature-des.txt').collect()
 	feat=[]
 	for i in features:
-	    	feat.append(i.split('-')[0].split(' ')[0])
+	    	#feat.append(i.split('-')[0].split(' ')[0])
+		feat.append(i.split(',')[1])
 
 
 
