@@ -151,6 +151,7 @@ def MatrixReducer(vectors,index):
 	def takeElement(vector):
 		p=[]
 		for i in index:
+			#p.append(vector[i[1]])
 			p.append(vector[i[1]])
 		return p
 	
