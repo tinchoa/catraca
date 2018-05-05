@@ -130,20 +130,20 @@ def CorrelationFeature(vectors):
 
 
 
-#def MatrixReducer(vectors, index):
+def MatrixReducerStream(vectors, index):
 
-#	reducedMatrix =[]
+	reducedMatrix =[]
 	#####
-#	vectors = np.matrix(vectors)
+	vectors = np.matrix(vectors)
 
-#	for k in index:
+	for k in index:
 		#reducedMatrix.append(matrizRaw[:,k[1]]) #reduced matrix 
-#		reducedMatrix.append(vectors[:,k]) #reduced matrix 
+		reducedMatrix.append(vectors[:,k]) #reduced matrix 
 
-#	vectors2 = np.column_stack(reducedMatrix)
-#	vectors2 = np.array(vectors2)
+	vectors2 = np.column_stack(reducedMatrix)
+	vectors2 = np.array(vectors2)
 	
-#	return vectors2
+	return vectors2
 
 
 def MatrixReducer(vectors,index):
@@ -312,10 +312,11 @@ if __name__ == "__main__":
 	###kafka
 	zkQuorum, topic = sys.argv[2:]
 
-	kvs = KafkaUtils.createStream(ssc, zkQuorum, "spark-streaming-consumer", {topic: 1})
+	#kvs = KafkaUtils.createStream(ssc, zkQuorum, "spark-streaming-consumer", {topic: 1})
 
+	kvs = KafkaUtils.createDirectStream(ssc, [topic], {"metadata.broker.list": zkQuorum})
 	parsed = kvs.map(lambda v: json.loads(v[1]))
-
+	#parsed.pprint()
 
 #	def preparaAporraToda(parsed):
 
@@ -325,8 +326,10 @@ if __name__ == "__main__":
 
 #		lines= lines.reduceByKey()
 	#lines.pprint()
-
- 	test = lines.flatMapValues(lambda x: MatrixReducer(x,index))
+	
+# 	test = lines.flatMapValues(lambda x: MatrixReducer(x,index))
+ 	test = lines.flatMapValues(lambda x: MatrixReducerStream(x,index))
+	test.pprint()
 
 	conf = {"es.resource" : "spark/test", "es.nodes" : ipES, "es.index.auto.create": "true"}
 		   
