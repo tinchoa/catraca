@@ -1,45 +1,45 @@
-0,srcip , (string) The source ip address
-1,srcport , The source port number
-2,dstip , (string) The destination ip address
-3,dstport , The destination port number
-4,proto , The protocol (ie. TCP = 6, UDP = 17)
-5,total_fpackets , Total packets in the forward direction
-6,total_fvolume , Total bytes in the forward direction
-7,total_bpackets , Total packets in the backward direction
-8,total_bvolume , Total bytes in the backward direction
-9,min_fpktl , The size of the smallest packet sent in the forward direction (in bytes)
-10,mean_fpktl , The mean size of packets sent in the forward direction (in bytes)
-11,max_fpktl , The size of the largest packet sent in the forward direction (in bytes)
-12,std_fpktl , The standard deviation from the mean of the packets sent in the forward direction (in bytes)
-13,min_bpktl , The size of the smallest packet sent in the backward direction (in bytes)
-14,mean_bpktl , The mean size of packets sent in the backward direction (in bytes)
-15,max_bpktl , The size of the largest packet sent in the backward direction (in bytes)
-16,std_bpktl , The standard deviation from the mean of the packets sent in the backward direction (in bytes)
-17,min_fiat , The minimum amount of time between two packets sent in the forward direction (in microseconds)
-18,mean_fiat , The mean amount of time between two packets sent in the forward direction (in microseconds)
-19,max_fiat , The maximum amount of time between two packets sent in the forward direction (in microseconds)
-20,std_fiat , The standard deviation from the mean amount of time between two packets sent in the forward direction (in microseconds)
-21,min_biat , The minimum amount of time between two packets sent in the backward direction (in microseconds)
-22,mean_biat , The mean amount of time between two packets sent in the backward direction (in microseconds)
-23,max_biat , The maximum amount of time between two packets sent in the backward direction (in microseconds)
-24,std_biat , The standard deviation from the mean amount of time between two packets sent in the backward direction (in microseconds)
-25,duration , The duration of the flow (in microseconds)
-26,min_active , The minimum amount of time that the flow was active before going idle (in microseconds)
-27,mean_active , The mean amount of time that the flow was active before going idle (in microseconds)
-28,max_active , The maximum amount of time that the flow was active before going idle (in microseconds)
-29,std_active , The standard deviation from the mean amount of time that the flow was active before going idle (in microseconds)
-30,min_idle , The minimum time a flow was idle before becoming active (in microseconds)
-31,mean_idle , The mean time a flow was idle before becoming active (in microseconds)
-32,max_idle , The maximum time a flow was idle before becoming active (in microseconds)
-33,std_idle , The standard devation from the mean time a flow was idle before becoming active (in microseconds)
-34,sflow_fpackets , The average number of packets in a sub flow in the forward direction
-35,sflow_fbytes , The average number of bytes in a sub flow in the forward direction
-36,sflow_bpackets , The average number of packets in a sub flow in the backward direction
-37,sflow_bbytes , The average number of packets in a sub flow in the backward direction
-38,fpsh_cnt , The number of times the PSH flag was set in packets travelling in the forward direction (0 for UDP)
-39,bpsh_cnt , The number of times the PSH flag was set in packets travelling in the backward direction (0 for UDP)
-40,furg_cnt , The number of times the URG flag was set in packets travelling in the forward direction (0 for UDP)
-41,burg_cnt , The number of times the URG flag was set in packets travelling in the backward direction (0 for UDP)
-42,total_fhlen , The total bytes used for headers in the forward direction.
-43,total_bhlen , The total bytes used for headers in the backward direction.
-44,class, class label
+0,srcip,(string) The source ip address
+1,srcport,The source port number
+2,dstip,(string) The destination ip address
+3,dstport,The destination port number
+4,proto,The protocol (ie. TCP = 6, UDP = 17)
+5,total_fpackets,Total packets in the forward direction
+6,total_fvolume,Total bytes in the forward direction
+7,total_bpackets,Total packets in the backward direction
+8,total_bvolume,Total bytes in the backward direction
+9,min_fpktl,The size of the smallest packet sent in the forward direction (in bytes)
+10,mean_fpktl,The mean size of packets sent in the forward direction (in bytes)
+11,max_fpktl,The size of the largest packet sent in the forward direction (in bytes)
+12,std_fpktl,The standard deviation from the mean of the packets sent in the forward direction (in bytes)
+13,min_bpktl,The size of the smallest packet sent in the backward direction (in bytes)
+14,mean_bpktl,The mean size of packets sent in the backward direction (in bytes)
+15,max_bpktl,The size of the largest packet sent in the backward direction (in bytes)
+16,std_bpktl,The standard deviation from the mean of the packets sent in the backward direction (in bytes)
+17,min_fiat,The minimum amount of time between two packets sent in the forward direction (in microseconds)
+18,mean_fiat,The mean amount of time between two packets sent in the forward direction (in microseconds)
+19,max_fiat,The maximum amount of time between two packets sent in the forward direction (in microseconds)
+20,std_fiat,The standard deviation from the mean amount of time between two packets sent in the forward direction (in microseconds)
+21,min_biat,The minimum amount of time between two packets sent in the backward direction (in microseconds)
+22,mean_biat,The mean amount of time between two packets sent in the backward direction (in microseconds)
+23,max_biat,The maximum amount of time between two packets sent in the backward direction (in microseconds)
+24,std_biat,The standard deviation from the mean amount of time between two packets sent in the backward direction (in microseconds)
+25,duration,The duration of the flow (in microseconds)
+26,min_active,The minimum amount of time that the flow was active before going idle (in microseconds)
+27,mean_active,The mean amount of time that the flow was active before going idle (in microseconds)
+28,max_active,The maximum amount of time that the flow was active before going idle (in microseconds)
+29,std_active,The standard deviation from the mean amount of time that the flow was active before going idle (in microseconds)
+30,min_idle,The minimum time a flow was idle before becoming active (in microseconds)
+31,mean_idle,The mean time a flow was idle before becoming active (in microseconds)
+32,max_idle,The maximum time a flow was idle before becoming active (in microseconds)
+33,std_idle,The standard devation from the mean time a flow was idle before becoming active (in microseconds)
+34,sflow_fpackets,The average number of packets in a sub flow in the forward direction
+35,sflow_fbytes,The average number of bytes in a sub flow in the forward direction
+36,sflow_bpackets,The average number of packets in a sub flow in the backward direction
+37,sflow_bbytes,The average number of packets in a sub flow in the backward direction
+38,fpsh_cnt,The number of times the PSH flag was set in packets travelling in the forward direction (0 for UDP)
+39,bpsh_cnt,The number of times the PSH flag was set in packets travelling in the backward direction (0 for UDP)
+40,furg_cnt,The number of times the URG flag was set in packets travelling in the forward direction (0 for UDP)
+41,burg_cnt,The number of times the URG flag was set in packets travelling in the backward direction (0 for UDP)
+42,total_fhlen,The total bytes used for headers in the forward direction.
+43,total_bhlen,The total bytes used for headers in the backward direction.
+44,class,class label
