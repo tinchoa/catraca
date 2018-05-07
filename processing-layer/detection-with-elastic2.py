@@ -1,6 +1,6 @@
 """
 run the example
-	spark-submit --master spark://master:7077 --packages TargetHolding:pyspark-elastic:0.4.2 --jars /opt/spark/jars/elasticsearch-spark-20_2.10-5.5.1.jar,/opt/spark/jars/spark-streaming-kafka-0-8-assembly_2.11-2.1.1.jar --conf spark.executor.extraJavaOptions=" -XX:MaxPermSize=15G "  /tmp/new.py hdfs://master:9000/user/app/reduced-25-with-classes.out 10.10.10.3:2181 topic1
+	spark-submit --master spark://master:7077  --jars /opt/spark/jars/elasticsearch-spark-20_2.10-5.5.1.jar,/opt/spark/jars/spark-streaming-kafka-0-8-assembly_2.11-2.1.1.jar --conf spark.executor.extraJavaOptions=" -XX:MaxPermSize=15G "  /tmp/new.py hdfs://master:9000/user/app/reduced-25-with-classes.out 10.10.10.3:2181 topic1
 
 '
 """
@@ -8,16 +8,14 @@ from __future__ import print_function
 
 import sys
 
-#from pyspark_elastic import EsSparkContext
+
 from pyspark.mllib.linalg import Vectors
 from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils, OffsetRange
 import json
-#import geoip2
 import time
 from geoip import geolite2
-import geoip2.database
 #### ML
 from pyspark.mllib.tree import DecisionTree, DecisionTreeModel
 from pyspark.mllib.util import MLUtils
@@ -71,14 +69,10 @@ def dataPreparing(lines):
 	classes=classes.map(lambda x: '1' if x !='0' else '0') # passing to binary classes
 	test = test.map(lambda x:x[0:numberFeatures-5]) #removing the class
 	
-	#print 'processing data'	
-
 	return test, classes ####ver como llega este test
 
 def CorrelationFeature(vectors):
 
-	
-#	print 'Calculation Correlation'
 	
 	matriz=sc.broadcast(Statistics.corr(vectors, method="pearson"))
 
@@ -100,34 +94,12 @@ def CorrelationFeature(vectors):
 
 	r=sorted([(value,key) for (key,value) in w.items()],reverse=True) #features sorted
 
-	#print r
-
-#	print 'calculating features selections'
-
-	#Old heuristic
-	# # w={}
-	# # for i in range(len(matriz)):
-	# # 	w[i]=0
-	# # 	for j in np.nan_to_num(matriz[i]):
-	# # 		k=abs(j)
-	# # 		w[i]=w[i]+k
-
-	# r=sorted([(value,key) for (key,value) in w.items()],reverse=True)
-
-	
-
-
-	#####""
-	#vectors=np.matrix(vectors)
-	#beforeMatrix=vectors.map(lambda x: np.matrix(x))
-
 	index=[]
 	for i in r:
 		index.append(i[1])
 	
 	index=index[0:6] #tacking the first 6 features
 
-	#MatrixReducer(vectors,index)
 	return index
 
 
@@ -153,23 +125,13 @@ def MatrixReducer(vectors,index):
 	def takeElement(vector):
 		p=[]
 		for i in index:
-			#p.append(vector[i[1]])
 			p.append(vector[i])
 		return p
 	
 	reducedMatrix= vectors.map(lambda x: takeElement(x))
-	#print 'reducing matrix'
-
-	# for k in aux:
-	# 	index.append(k[1])
-	# 	#reducedMatrix.append(matrizRaw[:,k[1]]) #reduced matrix 
-	# 	reducedMatrix.append(vectors[:,k[1]]) #reduced matrix 
-
 
 	vectors2=reducedMatrix.map(lambda x: np.column_stack(x))
 
-	# vectors2= np.column_stack(reducedMatrix)
-	# vectors2= np.array(vectors2)
 
 	return vectors2 #matriz reducida
 
@@ -188,7 +150,6 @@ def pass2libsvm(vectors2,classes):
 def blockFlows(flow):
 	vec = flow[0]
 	prediction = flow[1]
-	#prediction.map(lambda x: x).pprint()
 	if prediction != 0.0:
 		tupla = json.loads(vec)
 		ipSrc=tupla[0]
@@ -233,16 +194,7 @@ def getModel(path,file):
 
 		reduced=MatrixReducer(vector,index) 
 
-		#data=pass2libsvm(vector) 
-
 		data=pass2libsvm(reduced,classes) 
-
-	#data=pass2libsvm(vector,classes) 
-
-
-	#para a (5-tupla deveria ser algo como ) data=pass2libsvm(vector)
-
-		#(trainingData, testData) = data.randomSplit([0.7, 0.3])
 
 		# Train a DecisionTree model.
 		#  Empty categoricalFeaturesInfo indicates all features are continuous.
@@ -256,9 +208,7 @@ def getModel(path,file):
 def addLocation(x):
 	from geoip import geolite2 #
  	dictX = dict(x)
-# #	locSrcIp = geoip2.geolite2.lookup(dictX['srcip'])
  	locSrcIp = geolite2.lookup(dictX['srcip'])
-# #	locDstIp = geoip2.geolite2.lookup(dictX['dstip'])
  	locDstIp = geolite2.lookup(dictX['dstip'])
 	
  	try:
@@ -334,14 +284,9 @@ if __name__ == "__main__":
 	try:	
 		vec=test.map(lambda x: x[1])
 		ips=test.transform(lambda x: x.keys().zipWithIndex()).map(lambda x: (x[1],x[0]))
-#		prediction=test.transform(lambda x: model.predict(x.values())).pprint()
 		algo=test.transform(lambda x: model.predict(x.values()).zipWithIndex()).map(lambda x: (x[1],x[0]))
-#		algo.foreachRDD(lambda v: print(v.collect()))
 
-#		ips.foreachRDD(lambda v: print(v.collect()))
-#		algo.foreachRDD(lambda v: print(v.collect()))
 		joined = ips.join(algo).transform(lambda x: x.values())
-		#a=saveHDFS(joined,a)
 		joined.foreachRDD(lambda v: print(v.collect()))
 		#joined.map(blockFlows).pprint()
 
@@ -349,20 +294,13 @@ if __name__ == "__main__":
 		
 
                 toElastic = yyy.join(algo).transform(lambda x: x.values())
-                #toElastic.foreachRDD(lambda v: print(v.collect()))
-#		send=toElastic.join(algo).pprint()
-#		almostSend=toElastic.map(lambda x: dict([i for i in x[0].items()+[('predict',x[1])]]))
 		
 		almostSend=toElastic.map(lambda x: dict([i for i in x[0].items()+[('predict',x[1]),('timestamp',int(time.time()*1000))]]))
 		
 		now=almostSend.map(lambda x: ('key',x))
                 now.foreachRDD(lambda v: print(v.collect()))
 		
-			#toElastic.saveAsNewAPIHadoopFile(path='-',outputFormatClass="org.elasticsearch.hadoop.mr.EsOutputFormat",keyClass="org.apache.hadoop.io.NullWritable",valueClass="org.elasticsearch.hadoop.mr.LinkedMapWritable",conf=conf)
 		now.foreachRDD(lambda x: x.saveAsNewAPIHadoopFile(path='-',outputFormatClass="org.elasticsearch.hadoop.mr.EsOutputFormat",keyClass="org.apache.hadoop.io.NullWritable",valueClass="org.elasticsearch.hadoop.mr.LinkedMapWritable",conf=conf))
-#		algo=sc.parallelize(ips.collect(),prediction.collect()).pprint()
-
-#	        test.map(lambda x: (x[0],retornaRDD(x[1]))).pprint()
 	except AttributeError:
 		pass
 
