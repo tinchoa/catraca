@@ -17,6 +17,7 @@ import json
 #import geoip2
 import time
 from geoip import geolite2
+import geoip2.database
 #### ML
 from pyspark.mllib.tree import DecisionTree, DecisionTreeModel
 from pyspark.mllib.util import MLUtils
@@ -252,24 +253,56 @@ def getModel(path,file):
 
 		return	model, index
 
-def addLocation(x):
+# def addLocation(x):
+# 	dictX = dict(x)
+# #	locSrcIp = geoip2.geolite2.lookup(dictX['srcip'])
+# 	locSrcIp = geolite2.lookup(dictX['srcip'])
+# #	locDstIp = geoip2.geolite2.lookup(dictX['dstip'])
+# 	locDstIp = geolite2.lookup(dictX['dstip'])
+	
+# 	try:
+
+# 		if locSrcIp and locSrcIp.location:
+
+# 			dictX['srclocation']= {'lat': locSrcIp.location[0], 'lon':locSrcIp.location[1]}
+# 		else:
+# 			dictX['srclocation']= {'lat': 48, 'lon':22}
+
+
+# 		if locDstIp and locDstIp.location:
+# 			dictX['dstlocation']= {'lat': locSrcIp.location[0], 'lon':locSrcIp.location[1]}
+# 		else:
+# 			dictX['dstlocation']= {'lat': 48, 'lon':22}
+# 	except AttributeError:
+
+# 		pass
+# 	except TypeError:
+# 		pass
+		
+# 	return dictX
+
+def addLocationNew(x,reader=reader):
 	dictX = dict(x)
-#	locSrcIp = geoip2.geolite2.lookup(dictX['srcip'])
-	locSrcIp = geolite2.lookup(dictX['srcip'])
+
+
+	locSrcIp = reader.city(dictX['srcip'])
+	#locSrcIp = geoip2.geolite2.lookup(dictX['srcip'])
+	#locSrcIp = geolite2.lookup(dictX['srcip'])
 #	locDstIp = geoip2.geolite2.lookup(dictX['dstip'])
-	locDstIp = geolite2.lookup(dictX['dstip'])
+	locDstIp = reader.city(dictX['dstip'])
+	#locDstIp = geolite2.lookup(dictX['dstip'])
 	
 	try:
 
 		if locSrcIp and locSrcIp.location:
 
-			dictX['srclocation']= {'lat': locSrcIp.location[0], 'lon':locSrcIp.location[1]}
+			dictX['srclocation']= {'lat': locSrcIp.location.latitude, 'lon':locSrcIp.location.longitude}
 		else:
 			dictX['srclocation']= {'lat': 48, 'lon':22}
 
 
 		if locDstIp and locDstIp.location:
-			dictX['dstlocation']= {'lat': locSrcIp.location[0], 'lon':locSrcIp.location[1]}
+			dictX['dstlocation']= {'lat': locSrcIp.location.latitude, 'lon':locSrcIp.location.longitude}
 		else:
 			dictX['dstlocation']= {'lat': 48, 'lon':22}
 	except AttributeError:
@@ -287,7 +320,8 @@ if __name__ == "__main__":
 		exit(-1)
 
 	sc = SparkContext(appName="Kafka with DT")
-
+	reader = geoip2.database.Reader('hdfs://master:9000/user/app/GeoLite2-City.mmdb')
+#	
 	#Create model
 	a=0
 	orig=sys.argv[1]
