@@ -253,65 +253,34 @@ def getModel(path,file):
 
 		return	model, index
 
-# def addLocation(x):
-# 	dictX = dict(x)
+def addLocation(x):
+	from geoip import geolite2 #
+ 	dictX = dict(x)
 # #	locSrcIp = geoip2.geolite2.lookup(dictX['srcip'])
-# 	locSrcIp = geolite2.lookup(dictX['srcip'])
+ 	locSrcIp = geolite2.lookup(dictX['srcip'])
 # #	locDstIp = geoip2.geolite2.lookup(dictX['dstip'])
-# 	locDstIp = geolite2.lookup(dictX['dstip'])
+ 	locDstIp = geolite2.lookup(dictX['dstip'])
 	
-# 	try:
+ 	try:
 
-# 		if locSrcIp and locSrcIp.location:
+ 		if locSrcIp and locSrcIp.location:
 
-# 			dictX['srclocation']= {'lat': locSrcIp.location[0], 'lon':locSrcIp.location[1]}
-# 		else:
-# 			dictX['srclocation']= {'lat': 48, 'lon':22}
-
-
-# 		if locDstIp and locDstIp.location:
-# 			dictX['dstlocation']= {'lat': locSrcIp.location[0], 'lon':locSrcIp.location[1]}
-# 		else:
-# 			dictX['dstlocation']= {'lat': 48, 'lon':22}
-# 	except AttributeError:
-
-# 		pass
-# 	except TypeError:
-# 		pass
-		
-# 	return dictX
-
-def addLocationNew(x,reader=reader):
-	dictX = dict(x)
+ 			dictX['srclocation']= {'lat': locSrcIp.location[0], 'lon':locSrcIp.location[1]}
+ 		else:
+ 			dictX['srclocation']= {'lat': 48, 'lon':22}
 
 
-	locSrcIp = reader.city(dictX['srcip'])
-	#locSrcIp = geoip2.geolite2.lookup(dictX['srcip'])
-	#locSrcIp = geolite2.lookup(dictX['srcip'])
-#	locDstIp = geoip2.geolite2.lookup(dictX['dstip'])
-	locDstIp = reader.city(dictX['dstip'])
-	#locDstIp = geolite2.lookup(dictX['dstip'])
+ 		if locDstIp and locDstIp.location:
+ 			dictX['dstlocation']= {'lat': locSrcIp.location[0], 'lon':locSrcIp.location[1]}
+ 		else:
+ 			dictX['dstlocation']= {'lat': 48, 'lon':22}
+ 	except AttributeError:
+
+ 		pass
+ 	except TypeError:
+ 		pass
 	
-	try:
-
-		if locSrcIp and locSrcIp.location:
-
-			dictX['srclocation']= {'lat': locSrcIp.location.latitude, 'lon':locSrcIp.location.longitude}
-		else:
-			dictX['srclocation']= {'lat': 48, 'lon':22}
-
-
-		if locDstIp and locDstIp.location:
-			dictX['dstlocation']= {'lat': locSrcIp.location.latitude, 'lon':locSrcIp.location.longitude}
-		else:
-			dictX['dstlocation']= {'lat': 48, 'lon':22}
-	except AttributeError:
-
-		pass
-	except TypeError:
-		pass
-		
-	return dictX
+ 	return dictX
 
 
 if __name__ == "__main__":
@@ -320,7 +289,6 @@ if __name__ == "__main__":
 		exit(-1)
 
 	sc = SparkContext(appName="Kafka with DT")
-	reader = geoip2.database.Reader('hdfs://master:9000/user/app/GeoLite2-City.mmdb')
 #	
 	#Create model
 	a=0
@@ -349,22 +317,13 @@ if __name__ == "__main__":
 	###kafka
 	zkQuorum, topic = sys.argv[2:]
 
-	#kvs = KafkaUtils.createStream(ssc, zkQuorum, "spark-streaming-consumer", {topic: 1})
-
 	kvs = KafkaUtils.createDirectStream(ssc, [topic], {"metadata.broker.list": zkQuorum})
 	parsed = kvs.map(lambda v: json.loads(v[1]))
-	parsed.pprint()
-
-#	def preparaAporraToda(parsed):
 
 	lines  = parsed.map(lambda x: x.split(',')).map(lambda x:(json.dumps(x[0:4]), x[4:numberFeatures-1])).mapValues(lambda x: convertTofloat(x))
-#	lines.pprint()
  	elastic=parsed.map(lambda x: x.split(',')).map(lambda x: {feat[i]: x[i] for i in range(numberFeatures-2)}).map(addLocation) #get the whole verctor
 
 
-#		lines= lines.reduceByKey()
-	
-# 	test = lines.flatMapValues(lambda x: MatrixReducer(x,index))
  	test = lines.flatMapValues(lambda x: MatrixReducerStream(x,index))
 
 	conf = {"es.resource" : "spark/test", "es.nodes" : ipES, "es.index.auto.create": "true"}
