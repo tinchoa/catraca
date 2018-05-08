@@ -369,7 +369,8 @@ if __name__ == "__main__":
 #		algo=sc.parallelize(ips.collect(),prediction.collect()).pprint()
 
 #	        test.map(lambda x: (x[0],retornaRDD(x[1]))).pprint()
-	except AttributeError:
+	except AttributeError as e:
+		print e
 		pass
 
 	ssc.start()
